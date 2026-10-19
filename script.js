@@ -12,6 +12,8 @@ function saveTasks() {
 
 function renderTasks() {
     list.innerHTML = "";
+    document.getElementById("task-counter").textContent =
+    "Nombre de tâches : " + tasks.length;
 
     tasks.forEach(function (task) {
         const item = document.createElement("li");
