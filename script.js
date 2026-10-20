@@ -10,10 +10,23 @@ function saveTasks() {
     localStorage.setItem("tasks", JSON.stringify(tasks));
 }
 
+
 function renderTasks() {
     list.innerHTML = "";
+
+    const total = tasks.length;
+
+    const terminees = tasks.filter(function (task) {
+        return task.done;
+    }).length;
+
+    const restantes = total - terminees;
+
     document.getElementById("task-counter").textContent =
-    "Nombre de tâches : " + tasks.length;
+        "Total : " + total +
+        " | Restantes : " + restantes +
+        " | Terminées : " + terminees;
+
 
     tasks.forEach(function (task) {
         const item = document.createElement("li");
