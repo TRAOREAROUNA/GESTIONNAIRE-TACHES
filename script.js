@@ -36,11 +36,32 @@ label.textContent = task.text;
 
 const dateLabel = document.createElement("small");
 
-if (task.dueDate) {
-    dateLabel.textContent = " — Date limite : " + task.dueDate;
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+let status = "";
+
+if (task.done) {
+    status = " — TERMINÉE";
+} else if (!task.dueDate) {
+    status = " — SANS DATE LIMITE";
 } else {
-    dateLabel.textContent = " — Sans date limite";
+    const dueDate = new Date(task.dueDate + "T00:00:00");
+
+    if (dueDate < today) {
+        status = " — EN RETARD";
+    } else if (dueDate.getTime() === today.getTime()) {
+        status = " — À FAIRE AUJOURD'HUI";
+    } else {
+        status = " — EN COURS";
+    }
 }
+
+dateLabel.textContent =
+    (task.dueDate ? "Date limite : " + task.dueDate : "") +
+    status;
+
 
         if (task.done) {
             item.classList.add("done");
