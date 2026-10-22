@@ -229,3 +229,73 @@ searchInput.addEventListener("input", function () {
     renderTasks();
 });
 renderTasks();
+
+const exportButton = document.getElementById("export-tasks");
+const importFile = document.getElementById("import-file");
+
+// EXPORTER LES TÂCHES
+exportButton.addEventListener("click", function () {
+    const data = JSON.stringify(tasks, null, 2);
+    const file = new Blob([data], {
+        type: "application/json"
+    });
+
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "mes-taches.json";
+    link.click();
+
+    URL.revokeObjectURL(url);
+});
+
+// IMPORTER LES TÂCHES
+importFile.addEventListener("change", function () {
+    const file = importFile.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function (event) {
+        try {
+            const importedTasks = JSON.parse(event.target.result);
+
+            if (
+                !Array.isArray(importedTasks) ||
+                !importedTasks.every(function (task) {
+                    return (
+                        task &&
+                        typeof task.id === "number" &&
+                        typeof task.text === "string" &&
+                        typeof task.done === "boolean"
+                    );
+                })
+            ) {
+                alert("Le fichier ne contient pas une liste de tâches valide.");
+                return;
+            }
+
+            const confirmImport = confirm(
+                "L'importation remplacera toutes les tâches actuelles. Continuer ?"
+            );
+
+            if (!confirmImport) return;
+
+            tasks = importedTasks;
+            saveTasks();
+            cancelEdit();
+            renderTasks();
+
+            alert("Importation réussie !");
+        } catch (error) {
+            alert("Impossible de lire ce fichier JSON.");
+        } finally {
+            importFile.value = "";
+        }
+    };
+
+    reader.readAsText(file);
+});
+
