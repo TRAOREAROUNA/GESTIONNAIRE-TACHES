@@ -64,6 +64,7 @@ const filteredTasks = tasks.filter(function (task) {
 });
     const sortedTasks = [...filteredTasks];
 
+
 if (sortSelect.value === "priority") {
     const priorityOrder = {
         haute: 1,
@@ -76,6 +77,17 @@ if (sortSelect.value === "priority") {
                (priorityOrder[b.priority || "moyenne"] || 2);
     });
 }
+
+if (sortSelect.value === "due-date") {
+    sortedTasks.sort(function (a, b) {
+        if (!a.dueDate && !b.dueDate) return 0;
+        if (!a.dueDate) return 1;
+        if (!b.dueDate) return -1;
+
+        return a.dueDate.localeCompare(b.dueDate);
+    });
+}
+
 
     sortedTasks.forEach(function (task) {
         const item = document.createElement("li");
