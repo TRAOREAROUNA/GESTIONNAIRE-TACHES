@@ -3,6 +3,7 @@ const form = document.getElementById("task-form");
 const input = document.getElementById("task-input");
 const submitButton = form.querySelector('button[type="submit"]');
 const dueDateInput = document.getElementById("task-due-date");
+const priorityInput = document.getElementById("task-priority");
 const list = document.getElementById("task-list");
 
 let currentFilter = "all";
@@ -57,6 +58,12 @@ function renderTasks() {
         const label = document.createElement("span");
         label.textContent = task.text;
 
+const priorityLabel = document.createElement("small");
+const priority = task.priority || "moyenne";
+
+priorityLabel.textContent = "Priorité : " + priority.toUpperCase();
+priorityLabel.classList.add("priority-" + priority);
+
         const dateLabel = document.createElement("small");
 
         const today = new Date();
@@ -106,6 +113,7 @@ function renderTasks() {
             editingTaskId = task.id;
             input.value = task.text;
             dueDateInput.value = task.dueDate || "";
+            priorityInput.value = task.priority || "moyenne";
 
             submitButton.textContent = "Enregistrer les modifications";
             cancelButton.hidden = false;
@@ -129,13 +137,14 @@ function renderTasks() {
             renderTasks();
         });
 
-        item.append(
-            label,
-            dateLabel,
-            doneButton,
-            editButton,
-            deleteButton
-        );
+      item.append(
+    label,
+    priorityLabel,
+    dateLabel,
+    doneButton,
+    editButton,
+    deleteButton
+);
 
         list.appendChild(item);
     });
@@ -159,16 +168,18 @@ form.addEventListener("submit", function (event) {
         if (task) {
             task.text = text;
             task.dueDate = dueDateInput.value;
+            task.priority = priorityInput.value;
         }
 
         cancelEdit();
     } else {
-        tasks.push({
-            id: Date.now() + Math.random(),
-            text: text,
-            done: false,
-            dueDate: dueDateInput.value
-        });
+       tasks.push({
+    id: Date.now() + Math.random(),
+    text: text,
+    done: false,
+    dueDate: dueDateInput.value,
+    priority: priorityInput.value
+});
 
         form.reset();
     }
