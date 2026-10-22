@@ -43,6 +43,36 @@ function renderTasks() {
     const terminees = tasks.filter(task => task.done).length;
     const restantes = total - terminees;
 
+    
+const dashboardTotal = document.getElementById("dashboard-total");
+const dashboardCompleted = document.getElementById("dashboard-completed");
+const dashboardRemaining = document.getElementById("dashboard-remaining");
+const dashboardOverdue = document.getElementById("dashboard-overdue");
+const dashboardProgress = document.getElementById("dashboard-progress");
+
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+const overdueCount = tasks.filter(task => {
+    if (task.done || !task.dueDate) {
+        return false;
+    }
+
+    const dueDate = new Date(task.dueDate + "T00:00:00");
+    return dueDate < today;
+}).length;
+
+const progress = total === 0
+    ? 0
+    : Math.round((terminees / total) * 100);
+
+dashboardTotal.textContent = total;
+dashboardCompleted.textContent = terminees;
+dashboardRemaining.textContent = restantes;
+dashboardOverdue.textContent = overdueCount;
+dashboardProgress.textContent = progress + "%";
+
+
     document.getElementById("task-counter").textContent =
         "Total : " + total +
         " | Restantes : " + restantes +
