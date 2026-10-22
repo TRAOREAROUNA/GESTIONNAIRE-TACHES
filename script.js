@@ -81,10 +81,23 @@ dashboardProgress.textContent = progress + "%";
     const searchText = searchInput.value.trim().toLowerCase();
 
 const filteredTasks = tasks.filter(function (task) {
-    const matchesFilter =
-        currentFilter === "active" ? !task.done :
-        currentFilter === "completed" ? task.done :
-        true;
+    let matchesFilter = true;
+
+    if (currentFilter === "active") {
+        matchesFilter = !task.done;
+    } else if (currentFilter === "completed") {
+        matchesFilter = task.done;
+    } else if (currentFilter === "overdue") {
+        if (task.done || !task.dueDate) {
+            matchesFilter = false;
+        } else {
+            const dueDate = new Date(task.dueDate + "T00:00:00");
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            matchesFilter = dueDate < today;
+        }
+    }
 
     const matchesSearch = task.text
         .toLowerCase()
@@ -92,6 +105,7 @@ const filteredTasks = tasks.filter(function (task) {
 
     return matchesFilter && matchesSearch;
 });
+
     const sortedTasks = [...filteredTasks];
 
 
