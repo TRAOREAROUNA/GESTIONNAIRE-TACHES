@@ -5,6 +5,7 @@ const submitButton = form.querySelector('button[type="submit"]');
 const dueDateInput = document.getElementById("task-due-date");
 const priorityInput = document.getElementById("task-priority");
 const list = document.getElementById("task-list");
+const sortSelect = document.getElementById("task-sort");
 
 let currentFilter = "all";
 let editingTaskId = null;
@@ -51,8 +52,22 @@ function renderTasks() {
         if (currentFilter === "completed") return task.done;
         return true;
     });
+    const sortedTasks = [...filteredTasks];
 
-    filteredTasks.forEach(function (task) {
+if (sortSelect.value === "priority") {
+    const priorityOrder = {
+        haute: 1,
+        moyenne: 2,
+        basse: 3
+    };
+
+    sortedTasks.sort(function (a, b) {
+        return (priorityOrder[a.priority || "moyenne"] || 2) -
+               (priorityOrder[b.priority || "moyenne"] || 2);
+    });
+}
+
+    sortedTasks.forEach(function (task) {
         const item = document.createElement("li");
 
         const label = document.createElement("span");
@@ -196,6 +211,9 @@ filterButtons.forEach(function (button) {
         currentFilter = button.dataset.filter;
         renderTasks();
     });
+});
+sortSelect.addEventListener("change", function () {
+    renderTasks();
 });
 
 renderTasks();
