@@ -144,23 +144,32 @@ priorityLabel.classList.add("priority-" + priority);
             cancelButton.hidden = false;
             input.focus();
         });
-
         const deleteButton = document.createElement("button");
         deleteButton.type = "button";
         deleteButton.textContent = "Supprimer";
 
-        deleteButton.addEventListener("click", function () {
-            tasks = tasks.filter(function (t) {
-                return t.id !== task.id;
-            });
+        
+deleteButton.addEventListener("click", function () {
+    const confirmation = confirm(
+        'Voulez-vous vraiment supprimer la tâche "' + task.text + '" ?'
+    );
 
-            if (editingTaskId === task.id) {
-                cancelEdit();
-            }
+    if (!confirmation) {
+        return;
+    }
 
-            saveTasks();
-            renderTasks();
-        });
+    tasks = tasks.filter(function (t) {
+        return t.id !== task.id;
+    });
+
+    if (editingTaskId === task.id) {
+        cancelEdit();
+    }
+
+    saveTasks();
+    renderTasks();
+});
+
 
       item.append(
     label,
