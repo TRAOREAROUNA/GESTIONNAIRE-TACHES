@@ -11,19 +11,44 @@
     <main class="container">
         <h1>Mon gestionnaire de tâches</h1>
 
+
 <section id="task-dashboard">
     <h2>Tableau de bord</h2>
 
-    <p>Total des tâches : <span id="dashboard-total">0</span></p>
+    <div class="dashboard-cards">
+        <article class="dashboard-card card-total">
+            <h3>Total des tâches</h3>
+            <p id="dashboard-total">0</p>
+        </article>
 
-    <p>Tâches terminées : <span id="dashboard-completed">0</span></p>
+        <article class="dashboard-card card-completed">
+            <h3>Tâches terminées</h3>
+            <p id="dashboard-completed">0</p>
+        </article>
 
-    <p>Tâches restantes : <span id="dashboard-remaining">0</span></p>
+        <article class="dashboard-card card-remaining">
+            <h3>Tâches restantes</h3>
+            <p id="dashboard-remaining">0</p>
+        </article>
 
-    <p>Tâches en retard : <span id="dashboard-overdue">0</span></p>
+        <article class="dashboard-card card-overdue">
+            <h3>Tâches en retard</h3>
+            <p id="dashboard-overdue">0</p>
+        </article>
+    </div>
 
-    <p>Progression : <span id="dashboard-progress">0%</span></p>
+    <div class="dashboard-progress">
+        <p>
+            Progression globale :
+            <strong id="dashboard-progress">0%</strong>
+        </p>
+
+        <div class="progress-track">
+            <div id="dashboard-progress-bar" class="progress-fill"></div>
+        </div>
+    </div>
 </section>
+
 
         <p id="task-counter">Nombre de tâches : 0</p>
 
