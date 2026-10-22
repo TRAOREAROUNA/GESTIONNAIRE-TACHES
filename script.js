@@ -1,6 +1,7 @@
 
 const form = document.getElementById("task-form");
 const input = document.getElementById("task-input");
+let currentFilter = "all";
 const dueDateInput = document.getElementById("task-due-date");
 const list = document.getElementById("task-list");
 
@@ -29,7 +30,19 @@ function renderTasks() {
         " | Terminées : " + terminees;
 
 
-    tasks.forEach(function (task) {
+    const filteredTasks = tasks.filter(function (task) {
+    if (currentFilter === "active") {
+        return !task.done;
+    }
+
+    if (currentFilter === "completed") {
+        return task.done;
+    }
+
+    return true;
+});
+
+filteredTasks.forEach(function (task) {
         const item = document.createElement("li");
         const label = document.createElement("span");
 label.textContent = task.text;
@@ -114,6 +127,16 @@ tasks.push({
     input.value = "";
     dueDateInput.value = "";
     input.focus();
+});
+
+
+const filterButtons = document.querySelectorAll("#task-filters button");
+
+filterButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+        currentFilter = button.dataset.filter;
+        renderTasks();
+    });
 });
 
 // Afficher les tâches dès l'ouverture de la page
