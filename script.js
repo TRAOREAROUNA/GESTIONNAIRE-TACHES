@@ -6,6 +6,7 @@ const dueDateInput = document.getElementById("task-due-date");
 const priorityInput = document.getElementById("task-priority");
 const list = document.getElementById("task-list");
 const sortSelect = document.getElementById("task-sort");
+const searchInput = document.getElementById("task-search-input");
 
 let currentFilter = "all";
 let editingTaskId = null;
@@ -47,11 +48,20 @@ function renderTasks() {
         " | Restantes : " + restantes +
         " | Terminées : " + terminees;
 
-    const filteredTasks = tasks.filter(function (task) {
-        if (currentFilter === "active") return !task.done;
-        if (currentFilter === "completed") return task.done;
-        return true;
-    });
+    const searchText = searchInput.value.trim().toLowerCase();
+
+const filteredTasks = tasks.filter(function (task) {
+    const matchesFilter =
+        currentFilter === "active" ? !task.done :
+        currentFilter === "completed" ? task.done :
+        true;
+
+    const matchesSearch = task.text
+        .toLowerCase()
+        .includes(searchText);
+
+    return matchesFilter && matchesSearch;
+});
     const sortedTasks = [...filteredTasks];
 
 if (sortSelect.value === "priority") {
@@ -215,5 +225,7 @@ filterButtons.forEach(function (button) {
 sortSelect.addEventListener("change", function () {
     renderTasks();
 });
-
+searchInput.addEventListener("input", function () {
+    renderTasks();
+});
 renderTasks();
