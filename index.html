@@ -1,113 +1,108 @@
-
 <!DOCTYPE html>
 <html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Gestionnaire de tâches</title>
-    <link rel="stylesheet" href="style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
     <main class="container">
-        <h1>Mon gestionnaire de tâches</h1>
+      <h1>Mon gestionnaire de tâches</h1>
 
-<section id="task-dashboard">
-    <h2>Tableau de bord</h2>
+      <section id="task-dashboard">
+        <h2>Tableau de bord</h2>
 
-    <p>Total des tâches : <span id="dashboard-total">0</span></p>
+        <p>Total des tâches : <span id="dashboard-total">0</span></p>
 
-    <p>Tâches terminées : <span id="dashboard-completed">0</span></p>
+        <p>Tâches terminées : <span id="dashboard-completed">0</span></p>
 
-    <p>Tâches restantes : <span id="dashboard-remaining">0</span></p>
+        <p>Tâches restantes : <span id="dashboard-remaining">0</span></p>
 
-    <p>Tâches en retard : <span id="dashboard-overdue">0</span></p>
+        <p>Tâches en retard : <span id="dashboard-overdue">0</span></p>
 
-    <p>Progression : <span id="dashboard-progress">0%</span></p>
-</section>
+        <p>Progression : <span id="dashboard-progress">0%</span></p>
+      </section>
 
-        <p id="task-counter">Nombre de tâches : 0</p>
+      <p id="task-counter">Nombre de tâches : 0</p>
 
-        <form id="task-form">
-            <input id="task-input" type="text"
-                   placeholder="Nouvelle tâche..." required>
-            
-<label for="task-due-date">Date limite :</label>
-<input id="task-due-date" type="date">
+      <form id="task-form">
+        <input
+          id="task-input"
+          type="text"
+          placeholder="Nouvelle tâche..."
+          required
+        />
 
-<label for="task-priority">Priorité :</label>
-<select id="task-priority">
-    <option value="basse">Basse</option>
-    <option value="moyenne" selected>Moyenne</option>
-    <option value="haute">Haute</option>
-</select>
+        <label for="task-due-date">Date limite :</label>
+        <input id="task-due-date" type="date" />
 
-<button type="submit">Ajouter</button>
+        <label for="task-priority">Priorité :</label>
+        <select id="task-priority">
+          <option value="basse">Basse</option>
+          <option value="moyenne" selected>Moyenne</option>
+          <option value="haute">Haute</option>
+        </select>
 
+        <button type="submit">Ajouter</button>
+      </form>
+      <section id="task-reminders">
+        <h2>Rappels des tâches</h2>
+        <div id="reminders-list"></div>
+      </section>
 
-        </form>
+      <div id="task-filters">
+        <button type="button" data-filter="all">Toutes</button>
+        <button type="button" data-filter="active">Restantes</button>
+        <button type="button" data-filter="completed">Terminées</button>
+        <button type="button" data-filter="overdue">En retard</button>
+      </div>
 
-<div id="task-filters">
-    <button type="button" data-filter="all">Toutes</button>
-    <button type="button" data-filter="active">Restantes</button>
-    <button type="button" data-filter="completed">Terminées</button>
-    <button type="button" data-filter="overdue">En retard</button>
-</div>
+      <section id="task-calendar">
+        <h2>Calendrier des tâches</h2>
 
-<section id="task-calendar">
-    <h2>Calendrier des tâches</h2>
+        <div class="calendar-navigation">
+          <button type="button" id="calendar-previous">Mois précédent</button>
 
-    <div class="calendar-navigation">
-        <button type="button" id="calendar-previous">
-            Mois précédent
-        </button>
+          <h3 id="calendar-month"></h3>
 
-        <h3 id="calendar-month"></h3>
+          <button type="button" id="calendar-next">Mois suivant</button>
+        </div>
 
-        <button type="button" id="calendar-next">
-            Mois suivant
-        </button>
-    </div>
+        <div id="calendar-grid"></div>
+      </section>
 
-    <div id="calendar-grid"></div>
-</section>
+      <div id="task-search">
+        <label for="task-search-input">Rechercher une tâche :</label>
+        <input
+          id="task-search-input"
+          type="search"
+          placeholder="Saisir un mot-clé..."
+        />
+      </div>
+      <div id="task-backup">
+        <button type="button" id="export-tasks">Exporter les tâches</button>
 
+        <label for="import-file">Importer des tâches :</label>
+        <input type="file" id="import-file" accept=".json,application/json" />
+      </div>
 
-<div id="task-search">
-    <label for="task-search-input">Rechercher une tâche :</label>
-    <input
-        id="task-search-input"
-        type="search"
-        placeholder="Saisir un mot-clé..."
-    >
-</div>
-<div id="task-backup">
-    <button type="button" id="export-tasks">
-        Exporter les tâches
-    </button>
+      <div id="task-sorting">
+        <label for="task-sort">Trier les tâches :</label>
+        <select id="task-sort">
+          <option value="default">Ordre actuel</option>
+          <option value="priority">Priorité : haute vers basse</option>
+          <option value="due-date">Date limite : la plus proche</option>
+        </select>
+      </div>
 
-    <label for="import-file">Importer des tâches :</label>
-    <input
-        type="file"
-        id="import-file"
-        accept=".json,application/json"
-    >
-</div>
-
-<div id="task-sorting">
-    <label for="task-sort">Trier les tâches :</label>
-    <select id="task-sort">
-        <option value="default">Ordre actuel</option>
-        <option value="priority">Priorité : haute vers basse</option>
-        <option value="due-date">Date limite : la plus proche</option>
-    </select>
-</div>
-
-        <ul id="task-list"></ul>
+      <ul id="task-list"></ul>
     </main>
 
     <script src="progression.js"></script>
-<script src="script.js"></script>
-<script src="calendrier.js"></script>
-
-</body>
+    <script src="logique-rappels.js"></script>
+    <script src="script.js"></script>
+    <script src="calendrier.js"></script>
+    <script src="rappels.js"></script>
+  </body>
 </html>
