@@ -11,11 +11,19 @@ const searchInput = document.getElementById("task-search-input");
 let currentFilter = "all";
 let editingTaskId = null;
 
-let tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+window.tasks = JSON.parse(localStorage.getItem("tasks")) || [];
+let tasks = window.tasks;
+
 
 function saveTasks() {
+    window.tasks = tasks;
     localStorage.setItem("tasks", JSON.stringify(tasks));
+
+    if (typeof displayCalendar === "function") {
+        displayCalendar();
+    }
 }
+
 
 function cancelEdit() {
     editingTaskId = null;

@@ -53,6 +53,24 @@
     <button type="button" data-filter="overdue">En retard</button>
 </div>
 
+<section id="task-calendar">
+    <h2>Calendrier des tâches</h2>
+
+    <div class="calendar-navigation">
+        <button type="button" id="calendar-previous">
+            Mois précédent
+        </button>
+
+        <h3 id="calendar-month"></h3>
+
+        <button type="button" id="calendar-next">
+            Mois suivant
+        </button>
+    </div>
+
+    <div id="calendar-grid"></div>
+</section>
+
 
 <div id="task-search">
     <label for="task-search-input">Rechercher une tâche :</label>
@@ -89,5 +107,7 @@
 
     <script src="progression.js"></script>
 <script src="script.js"></script>
+<script src="calendrier.js"></script>
+
 </body>
 </html>
