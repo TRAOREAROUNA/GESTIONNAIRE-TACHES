@@ -62,9 +62,7 @@ const overdueCount = tasks.filter(task => {
     return dueDate < today;
 }).length;
 
-const progress = total === 0
-    ? 0
-    : Math.round((terminees / total) * 100);
+const progress = calculerProgression(total, terminees);
 
 dashboardTotal.textContent = total;
 dashboardCompleted.textContent = terminees;
