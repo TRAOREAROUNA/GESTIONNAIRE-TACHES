@@ -1,60 +1,281 @@
 
+/* =========================
+   1. STYLE GENERAL
+========================= */
+
+* {
+    box-sizing: border-box;
+}
+
 body {
     font-family: Arial, sans-serif;
-    background: #f2f4f8;
+    background: #f1f5f9;
+    color: #1e293b;
     margin: 0;
-    padding: 40px 16px;
+    padding: 32px 16px;
+    line-height: 1.5;
 }
 
 .container {
-    max-width: 600px;
-    margin: auto;
-    background: white;
-    padding: 25px;
-    border-radius: 12px;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px;
+    background: #ffffff;
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(15, 23, 42, 0.08);
 }
 
 h1 {
     text-align: center;
-    color: #24344d;
+    color: #1e3a5f;
+    font-size: 30px;
+    margin: 0 0 30px;
 }
 
-form {
+h2 {
+    color: #1e3a5f;
+    margin-top: 0;
+}
+
+/* =========================
+   2. TABLEAU DE BORD
+========================= */
+
+#task-dashboard {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 24px;
+    padding: 20px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+}
+
+#task-dashboard h2 {
+    grid-column: 1 / -1;
+    margin-bottom: 4px;
+}
+
+#task-dashboard p {
+    margin: 0;
+    padding: 14px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+/* =========================
+   3. COMPTEUR
+========================= */
+
+#task-counter {
+    padding: 12px 16px;
+    margin: 0 0 20px;
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-radius: 8px;
+    font-weight: bold;
+}
+
+/* =========================
+   4. FORMULAIRE
+========================= */
+
+#task-form {
     display: flex;
-    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 18px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
 }
 
-input {
-    flex: 1;
-    min-width: 0;
-    padding: 12px;
+#task-input {
+    flex: 1 1 100%;
+    width: 100%;
 }
+
+#task-form label {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+#task-due-date {
+    flex: 0 1 170px;
+}
+
+#task-priority {
+    flex: 0 1 150px;
+}
+
+input,
+select {
+    min-width: 0;
+    max-width: 100%;
+    padding: 11px 12px;
+    font: inherit;
+    border: 1px solid #cbd5e1;
+    border-radius: 7px;
+    background: #ffffff;
+}
+
+input:focus,
+select:focus {
+    outline: 2px solid #93c5fd;
+    border-color: #2563eb;
+}
+
+/* =========================
+   5. BOUTONS
+========================= */
 
 button {
-    padding: 12px;
+    padding: 10px 15px;
+    font: inherit;
+    font-size: 14px;
+    font-weight: 600;
     cursor: pointer;
     background: #1769aa;
-    color: white;
+    color: #ffffff;
     border: none;
-    border-radius: 5px;
+    border-radius: 7px;
+    transition: background 0.2s ease;
 }
 
-li {
-    margin-top: 12px;
-    padding: 10px;
-    background: #f2f4f8;
+button:hover {
+    background: #12548a;
+}
+
+button:focus-visible {
+    outline: 3px solid #93c5fd;
+    outline-offset: 2px;
+}
+
+#task-form button {
+    flex: 0 0 auto;
+}
+
+/* =========================
+   6. FILTRES
+========================= */
+
+#task-filters {
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
     gap: 8px;
+    margin: 20px 0;
 }
 
-li.done span {
+#task-filters button {
+    background: #e2e8f0;
+    color: #334155;
+}
+
+#task-filters button:hover {
+    background: #cbd5e1;
+}
+
+/* =========================
+   7. RECHERCHE ET TRI
+========================= */
+
+#task-search,
+#task-sorting {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0;
+}
+
+#task-search label,
+#task-sorting label {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+#task-search-input {
+    flex: 1 1 240px;
+}
+
+#task-sort {
+    flex: 0 1 260px;
+}
+
+/* =========================
+   8. IMPORT ET EXPORT
+========================= */
+
+#task-backup {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 20px 0;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+#task-backup label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+/* =========================
+   9. LISTE DES TACHES
+========================= */
+
+#task-list {
+    list-style: none;
+    padding: 0;
+    margin: 20px 0 0;
+}
+
+#task-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin: 12px 0;
+    padding: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+}
+
+#task-list li span {
+    flex: 1 1 180px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-weight: 600;
+}
+
+#task-list li small {
+    font-size: 13px;
+    overflow-wrap: anywhere;
+}
+
+#task-list li.done {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+#task-list li.done span {
     text-decoration: line-through;
-    color: gray;
+    color: #64748b;
 }
 
+/* =========================
+   10. PRIORITES
+========================= */
 
-/* Affichage des priorités */
 .priority-haute {
     color: #dc2626;
     font-weight: bold;
@@ -68,4 +289,61 @@ li.done span {
 .priority-basse {
     color: #16a34a;
     font-weight: bold;
+}
+
+/* =========================
+   11. PETITS ECRANS
+========================= */
+
+@media (max-width: 650px) {
+    body {
+        padding: 12px;
+    }
+
+    .container {
+        padding: 18px;
+        border-radius: 10px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+
+    #task-dashboard {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        padding: 12px;
+    }
+
+    #task-dashboard p {
+        padding: 10px;
+        font-size: 13px;
+        overflow-wrap: anywhere;
+    }
+
+    #task-form {
+        align-items: stretch;
+    }
+
+    #task-form input,
+    #task-form select,
+    #task-form button {
+        max-width: 100%;
+    }
+
+    #task-due-date,
+    #task-priority {
+        flex: 1 1 100%;
+    }
+
+    #task-list li {
+        align-items: flex-start;
+    }
+
+    #task-list li button {
+        flex: 1 1 auto;
+    }
+
+    #task-backup input[type="file"] {
+        width: 100%;
+    }
 }
