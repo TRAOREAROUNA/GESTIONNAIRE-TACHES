@@ -232,6 +232,7 @@ renderTasks();
 
 const exportButton = document.getElementById("export-tasks");
 const importFile = document.getElementById("import-file");
+const exportCsvButton = document.getElementById("export-csv");
 
 // EXPORTER LES TÂCHES
 exportButton.addEventListener("click", function () {
@@ -249,6 +250,55 @@ exportButton.addEventListener("click", function () {
 
     URL.revokeObjectURL(url);
 });
+
+
+// EXPORTER LES TÂCHES EN CSV POUR EXCEL
+exportCsvButton.addEventListener("click", function () {
+    const headers = [
+        "ID",
+        "Tâche",
+        "Terminée",
+        "Date limite",
+        "Priorité"
+    ];
+
+    const rows = tasks.map(function (task) {
+        return [
+            task.id,
+            task.text,
+            task.done ? "Oui" : "Non",
+            task.dueDate || "",
+            task.priority || "moyenne"
+        ];
+    });
+
+    function escapeCsv(value) {
+        return '"' +
+            String(value ?? "").replace(/"/g, '""') +
+            '"';
+    }
+
+    const csv = [headers, ...rows]
+        .map(function (row) {
+            return row.map(escapeCsv).join(";");
+        })
+        .join("\r\n");
+
+    const file = new Blob(
+        ["\uFEFF" + csv],
+        { type: "text/csv;charset=utf-8;" }
+    );
+
+    const url = URL.createObjectURL(file);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = "mes-taches.csv";
+    link.click();
+
+    URL.revokeObjectURL(url);
+});
+
 
 // IMPORTER LES TÂCHES
 importFile.addEventListener("change", function () {
