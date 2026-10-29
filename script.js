@@ -107,7 +107,6 @@ function renderTasks () {
       }
     }
 
-
     const matchesSearch = task.text.toLowerCase().includes(searchText)
 
     return matchesFilter && matchesSearch
@@ -314,6 +313,47 @@ exportButton.addEventListener('click', function () {
 
   link.href = url
   link.download = 'mes-taches.json'
+  link.click()
+
+  URL.revokeObjectURL(url)
+})
+
+const csvButton = document.getElementById('export-csv')
+
+// EXPORTER LES TÂCHES EN CSV POUR EXCEL
+csvButton.addEventListener('click', function () {
+  const headers = ['ID', 'Tâche', 'Terminée', 'Date limite', 'Priorité']
+
+  const rows = tasks.map(function (task) {
+    return [
+      task.id,
+      task.text,
+      task.done ? 'Oui' : 'Non',
+      task.dueDate || '',
+      task.priority || 'moyenne'
+    ]
+  })
+
+  function escapeCSV (value) {
+    return '"' + String(value ?? '').replace(/"/g, '""') + '"'
+  }
+
+  const csvContent = [headers, ...rows]
+    .map(function (row) {
+      return row.map(escapeCSV).join(';')
+    })
+    .join('\r\n')
+
+  // BOM UTF-8 pour préserver les accents dans Excel
+  const file = new Blob(['\uFEFF' + csvContent], {
+    type: 'text/csv;charset=utf-8;'
+  })
+
+  const url = URL.createObjectURL(file)
+  const link = document.createElement('a')
+
+  link.href = url
+  link.download = 'mes-taches.csv'
   link.click()
 
   URL.revokeObjectURL(url)
