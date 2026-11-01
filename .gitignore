@@ -1,0 +1,12 @@
+# Dépendances Node.js
+node_modules/
+
+# Base de données SQLite
+database/*.db
+database/*.db-shm
+database/*.db-wal
+
+# Variables confidentielles
+.env
+# Fichiers de session
+cookies.txt
