@@ -1,0 +1,29 @@
+{
+  "name": "gestionnaire-taches",
+  "version": "1.0.0",
+  "description": "",
+  "main": "calendrier.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TRAOREAROUNA/GESTIONNAIRE-TACHES.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/TRAOREAROUNA/GESTIONNAIRE-TACHES/issues"
+  },
+  "homepage": "https://github.com/TRAOREAROUNA/GESTIONNAIRE-TACHES#readme",
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "better-sqlite3": "^13.0.3",
+    "better-sqlite3-session-store": "^0.1.0",
+    "dotenv": "^18.0.9",
+    "express": "^5.3.0",
+    "express-session": "^1.19.0"
+  }
+}
