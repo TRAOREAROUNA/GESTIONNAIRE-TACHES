@@ -41,6 +41,39 @@ app.use(
     }
   })
 )
+// Vérification de l'origine des requêtes sensibles
+app.use((req, res, next) => {
+  const method = req.method.toUpperCase()
+
+  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+    return next()
+  }
+
+  const origin = req.get('origin')
+  const referer = req.get('referer')
+  const source = origin || referer
+
+  // Autoriser les clients comme curl sans en-tête Origin ou Referer
+  if (!source) {
+    return next()
+  }
+
+  try {
+    const sourceUrl = new URL(source)
+
+    if (sourceUrl.host !== req.get('host')) {
+      return res.status(403).json({
+        message: 'Origine de la requête non autorisée.'
+      })
+    }
+  } catch {
+    return res.status(403).json({
+      message: 'Origine de la requête invalide.'
+    })
+  }
+
+  next()
+})
 
 // Routes d'authentification
 app.use('/api/auth', authRoutes)
