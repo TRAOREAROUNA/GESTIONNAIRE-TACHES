@@ -9,15 +9,36 @@ router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body
 
-    if (!name || !email || !password) {
+    if (
+      typeof name !== 'string' ||
+      typeof email !== 'string' ||
+      typeof password !== 'string' ||
+      !name.trim() ||
+      !email.trim() ||
+      !password
+    ) {
       return res.status(400).json({
         message: 'Tous les champs sont obligatoires.'
       })
     }
 
-    if (password.length < 8) {
+    if (name.trim().length > 100) {
       return res.status(400).json({
-        message: 'Le mot de passe doit contenir au moins 8 caractères.'
+        message: 'Le nom ne doit pas dépasser 100 caractères.'
+      })
+    }
+
+    const emailNormalise = email.trim().toLowerCase()
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailNormalise)) {
+      return res.status(400).json({
+        message: 'Adresse e-mail invalide.'
+      })
+    }
+
+    if (password.length < 8 || password.length > 72) {
+      return res.status(400).json({
+        message: 'Le mot de passe doit contenir entre 8 et 72 caractères.'
       })
     }
 
@@ -40,7 +61,7 @@ router.post('/register', async (req, res) => {
       VALUES (?, ?, ?)
     `
       )
-      .run(name.trim(), email.trim().toLowerCase(), passwordHash)
+      .run(name.trim(), emailNormalise, passwordHash)
 
     req.session.userId = result.lastInsertRowid
 
@@ -49,7 +70,7 @@ router.post('/register', async (req, res) => {
       user: {
         id: result.lastInsertRowid,
         name: name.trim(),
-        email: email.trim().toLowerCase()
+        email: emailNormalise
       }
     })
   } catch (error) {
@@ -65,15 +86,21 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body
 
-    if (!email || !password) {
+    if (
+      typeof email !== 'string' ||
+      typeof password !== 'string' ||
+      !email.trim() ||
+      !password ||
+      password.length > 72
+    ) {
       return res.status(400).json({
-        message: 'E-mail et mot de passe obligatoires.'
+        message: 'E-mail et mot de passe obligatoires ou invalides.'
       })
     }
 
     const user = db
       .prepare('SELECT * FROM users WHERE email = ?')
-      .get(email.trim().toLowerCase())
+      .get(emailNormalise)
 
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({
