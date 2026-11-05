@@ -1,8 +1,20 @@
 const express = require('express')
 const bcrypt = require('bcrypt')
 const db = require('../database/db')
-
+const rateLimit = require('express-rate-limit')
 const router = express.Router()
+
+// Limiter les tentatives de connexion
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  limit: 5, // 5 tentatives maximum
+  standardHeaders: true,
+  legacyHeaders: false,
+  skipSuccessfulRequests: true,
+  message: {
+    message: 'Trop de tentatives de connexion. Réessayez dans 15 minutes.'
+  }
+})
 
 // Inscription d'un utilisateur
 router.post('/register', async (req, res) => {
@@ -82,7 +94,7 @@ router.post('/register', async (req, res) => {
 })
 
 // Connexion d'un utilisateur
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body
 
@@ -97,7 +109,7 @@ router.post('/login', async (req, res) => {
         message: 'E-mail et mot de passe obligatoires ou invalides.'
       })
     }
-
+    const emailNormalise = email.trim().toLowerCase()
     const user = db
       .prepare('SELECT * FROM users WHERE email = ?')
       .get(emailNormalise)
