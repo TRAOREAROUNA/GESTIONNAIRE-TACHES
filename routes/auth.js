@@ -75,7 +75,32 @@ router.post('/register', async (req, res) => {
       )
       .run(name.trim(), emailNormalise, passwordHash)
 
-    req.session.userId = result.lastInsertRowid
+    req.session.regenerate(error => {
+      if (error) {
+        return res.status(500).json({
+          message: 'Erreur lors de la création de la session.'
+        })
+      }
+
+      req.session.userId = result.lastInsertRowid
+
+      req.session.save(saveError => {
+        if (saveError) {
+          return res.status(500).json({
+            message: 'Erreur lors de la sauvegarde de la session.'
+          })
+        }
+
+        res.status(201).json({
+          message: 'Compte créé avec succès.',
+          user: {
+            id: result.lastInsertRowid,
+            name: name.trim(),
+            email: emailNormalise
+          }
+        })
+      })
+    })
 
     res.status(201).json({
       message: 'Compte créé avec succès.',

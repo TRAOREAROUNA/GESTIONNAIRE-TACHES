@@ -188,10 +188,13 @@ function renderTasks () {
       const nouveauStatut = !task.done
 
       try {
+        const token = await window.obtenirJetonCsrf()
+
         const response = await fetch('/api/tasks/' + task.id, {
           method: 'PUT',
           headers: {
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'x-csrf-token': token
           },
           body: JSON.stringify({
             text: task.text,
@@ -244,8 +247,13 @@ function renderTasks () {
       }
 
       try {
+        const token = await window.obtenirJetonCsrf()
+
         const response = await fetch('/api/tasks/' + task.id, {
-          method: 'DELETE'
+          method: 'DELETE',
+          headers: {
+            'x-csrf-token': token
+          }
         })
 
         const data = await response.json()
@@ -335,15 +343,25 @@ form.addEventListener('submit', async function (event) {
 
       taskData.done = task.done
 
+      const token = await window.obtenirJetonCsrf()
+
       response = await fetch('/api/tasks/' + editingTaskId, {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': token
+        },
         body: JSON.stringify(taskData)
       })
     } else {
+      const token = await window.obtenirJetonCsrf()
+
       response = await fetch('/api/tasks', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'x-csrf-token': token
+        },
         body: JSON.stringify(taskData)
       })
     }
