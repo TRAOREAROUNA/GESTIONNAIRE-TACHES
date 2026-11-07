@@ -4,12 +4,14 @@ require('dotenv').config()
 const express = require('express')
 const path = require('path')
 const session = require('express-session')
+const { csrfSync } = require('csrf-sync')
 const SqliteStore = require('better-sqlite3-session-store')(session)
 const db = require('./database/db')
 const authRoutes = require('./routes/auth')
 const taskRoutes = require('./routes/tasks')
 
 const app = express()
+const { generateToken, csrfSynchronisedProtection } = csrfSync()
 const PORT = 3000
 
 // Vérification du secret de session
@@ -74,6 +76,15 @@ app.use((req, res, next) => {
 
   next()
 })
+// Générer et transmettre le jeton CSRF
+app.get('/api/csrf-token', (req, res) => {
+  res.json({
+    csrfToken: generateToken(req)
+  })
+})
+
+// Activer la protection CSRF
+app.use(csrfSynchronisedProtection)
 
 // Routes d'authentification
 app.use('/api/auth', authRoutes)

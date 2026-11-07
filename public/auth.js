@@ -1,6 +1,30 @@
 const authSection = document.getElementById('auth-section')
 const taskApp = document.getElementById('task-app')
 
+// Gestion du jeton CSRF
+let csrfToken = null
+
+async function obtenirJetonCsrf () {
+  try {
+    const response = await fetch('/api/csrf-token')
+
+    if (!response.ok) {
+      throw new Error('Impossible de récupérer le jeton CSRF.')
+    }
+
+    const data = await response.json()
+    csrfToken = data.csrfToken
+
+    return csrfToken
+  } catch (error) {
+    console.error(error)
+    throw error
+  }
+}
+
+// Rendre la fonction accessible aux autres scripts
+window.obtenirJetonCsrf = obtenirJetonCsrf
+
 const loginForm = document.getElementById('login-form')
 const registerForm = document.getElementById('register-form')
 
@@ -9,12 +33,12 @@ const currentUser = document.getElementById('current-user')
 const logoutButton = document.getElementById('logout-button')
 
 // Afficher les messages
-function afficherMessage(message) {
+function afficherMessage (message) {
   authMessage.textContent = message
 }
 
 // Vérifier la session utilisateur
-async function verifierSession() {
+async function verifierSession () {
   try {
     const response = await fetch('/api/auth/me')
 
@@ -29,6 +53,7 @@ async function verifierSession() {
     currentUser.textContent = data.user.name
     authSection.hidden = true
     taskApp.hidden = false
+
     await chargerTaches()
   } catch (error) {
     afficherMessage('Impossible de contacter le serveur.')
@@ -36,17 +61,20 @@ async function verifierSession() {
 }
 
 // Connexion
-loginForm.addEventListener('submit', async (event) => {
+loginForm.addEventListener('submit', async event => {
   event.preventDefault()
 
   const email = document.getElementById('login-email').value
   const password = document.getElementById('login-password').value
 
   try {
+    const token = await obtenirJetonCsrf()
+
     const response = await fetch('/api/auth/login', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-csrf-token': token
       },
       body: JSON.stringify({ email, password })
     })
@@ -67,7 +95,7 @@ loginForm.addEventListener('submit', async (event) => {
 })
 
 // Inscription
-registerForm.addEventListener('submit', async (event) => {
+registerForm.addEventListener('submit', async event => {
   event.preventDefault()
 
   const name = document.getElementById('register-name').value
@@ -75,10 +103,13 @@ registerForm.addEventListener('submit', async (event) => {
   const password = document.getElementById('register-password').value
 
   try {
+    const token = await obtenirJetonCsrf()
+
     const response = await fetch('/api/auth/register', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'x-csrf-token': token
       },
       body: JSON.stringify({ name, email, password })
     })
@@ -101,8 +132,13 @@ registerForm.addEventListener('submit', async (event) => {
 // Déconnexion
 logoutButton.addEventListener('click', async () => {
   try {
+    const token = await obtenirJetonCsrf()
+
     const response = await fetch('/api/auth/logout', {
-      method: 'POST'
+      method: 'POST',
+      headers: {
+        'x-csrf-token': token
+      }
     })
 
     if (response.ok) {
