@@ -78,8 +78,17 @@ function creerApp (db) {
       csrfToken: generateToken(req)
     })
   })
-
   app.use(csrfSynchronisedProtection)
+
+  app.use((err, req, res, next) => {
+    if (err.code === 'EBADCSRFTOKEN') {
+      return res.status(403).json({
+        message: 'Jeton CSRF invalide ou manquant.'
+      })
+    }
+
+    next(err)
+  })
 
   app.use('/api/auth', creerRoutesAuth(db))
   app.use('/api/tasks', creerRoutesTasks(db))
