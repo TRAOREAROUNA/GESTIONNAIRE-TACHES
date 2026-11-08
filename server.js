@@ -1,109 +1,12 @@
-// Chargement des variables confidentielles
 require('dotenv').config()
 
-const express = require('express')
-const path = require('path')
-const session = require('express-session')
-const { csrfSync } = require('csrf-sync')
-const SqliteStore = require('better-sqlite3-session-store')(session)
 const db = require('./database/db')
-const authRoutes = require('./routes/auth')
-const taskRoutes = require('./routes/tasks')
+const creerApp = require('./app')
 
-const app = express()
-const { generateToken, csrfSynchronisedProtection } = csrfSync()
-const PORT = 3000
+const PORT = process.env.PORT || 3000
 
-// Vérification du secret de session
-if (!process.env.SESSION_SECRET) {
-  throw new Error('SESSION_SECRET est absent du fichier .env')
-}
+const app = creerApp(db)
 
-// Réception des données JSON
-app.use(express.json())
-
-// Configuration des sessions
-app.use(
-  session({
-    store: new SqliteStore({
-      client: db,
-      expired: {
-        clear: true,
-        intervalMs: 900000
-      }
-    }),
-    secret: process.env.SESSION_SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      httpOnly: true,
-      sameSite: 'lax',
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 2 * 60 * 60 * 1000
-    }
-  })
-)
-// Vérification de l'origine des requêtes sensibles
-app.use((req, res, next) => {
-  const method = req.method.toUpperCase()
-
-  if (!['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
-    return next()
-  }
-
-  const origin = req.get('origin')
-  const referer = req.get('referer')
-  const source = origin || referer
-
-  // Autoriser les clients comme curl sans en-tête Origin ou Referer
-  if (!source) {
-    return next()
-  }
-
-  try {
-    const sourceUrl = new URL(source)
-
-    if (sourceUrl.host !== req.get('host')) {
-      return res.status(403).json({
-        message: 'Origine de la requête non autorisée.'
-      })
-    }
-  } catch {
-    return res.status(403).json({
-      message: 'Origine de la requête invalide.'
-    })
-  }
-
-  next()
-})
-// Générer et transmettre le jeton CSRF
-app.get('/api/csrf-token', (req, res) => {
-  res.json({
-    csrfToken: generateToken(req)
-  })
-})
-
-// Activer la protection CSRF
-app.use(csrfSynchronisedProtection)
-
-// Routes d'authentification
-app.use('/api/auth', authRoutes)
-
-// Routes de gestion des tâches
-app.use('/api/tasks', taskRoutes)
-
-// Mise à disposition de l'interface web
-app.use(express.static(path.join(__dirname, 'public')))
-
-// Route de test
-app.get('/api', function (req, res) {
-  res.json({
-    message: 'Bienvenue sur le serveur du gestionnaire de tâches !',
-    status: 'OK'
-  })
-})
-
-// Démarrage du serveur
-app.listen(PORT, function () {
+app.listen(PORT, () => {
   console.log(`Serveur démarré sur http://localhost:${PORT}`)
 })
