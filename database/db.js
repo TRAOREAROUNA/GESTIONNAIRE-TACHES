@@ -1,11 +1,10 @@
-
 const Database = require('better-sqlite3')
 const path = require('path')
 
 // Création ou ouverture de la base de données
-const db = new Database(
-  path.join(__dirname, 'gestionnaire.db')
-)
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'gestionnaire.db')
+
+const db = new Database(dbPath)
 
 // Activation des clés étrangères
 db.pragma('foreign_keys = ON')

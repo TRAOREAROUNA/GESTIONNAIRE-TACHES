@@ -1,8 +1,14 @@
 const express = require('express')
 const bcrypt = require('bcrypt')
-const db = require('../database/db')
 const rateLimit = require('express-rate-limit')
-const router = express.Router()
+function creerRoutesAuth (db) {
+  const router = express.Router()
+  // Toutes tes routes existantes restent ici :
+  // Inscription
+  // Connexion
+  // Vérification de l'utilisateur
+  // Déconnexion
+
 
 // Limiter les tentatives de connexion
 const loginLimiter = rateLimit({
@@ -90,7 +96,6 @@ router.post('/register', async (req, res) => {
             message: 'Erreur lors de la sauvegarde de la session.'
           })
         }
-
         res.status(201).json({
           message: 'Compte créé avec succès.',
           user: {
@@ -100,15 +105,6 @@ router.post('/register', async (req, res) => {
           }
         })
       })
-    })
-
-    res.status(201).json({
-      message: 'Compte créé avec succès.',
-      user: {
-        id: result.lastInsertRowid,
-        name: name.trim(),
-        email: emailNormalise
-      }
     })
   } catch (error) {
     console.error(error)
@@ -223,4 +219,7 @@ router.post('/logout', (req, res) => {
   })
 })
 
-module.exports = router
+  return router
+}
+
+module.exports = creerRoutesAuth
