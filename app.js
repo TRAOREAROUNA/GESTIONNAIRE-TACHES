@@ -5,6 +5,16 @@ const path = require('path')
 const session = require('express-session')
 const { csrfSync } = require('csrf-sync')
 const SqliteStore = require('better-sqlite3-session-store')(session)
+class SqliteStoreAvecTimerNonBloquant extends SqliteStore {
+  startInterval () {
+    const interval = setInterval(
+      this.clearExpiredSessions.bind(this),
+      this.expired.intervalMs
+    )
+
+    interval.unref()
+  }
+}
 
 const creerRoutesAuth = require('./routes/auth')
 const creerRoutesTasks = require('./routes/tasks')
@@ -22,7 +32,7 @@ function creerApp (db) {
 
   app.use(
     session({
-      store: new SqliteStore({
+      store: new SqliteStoreAvecTimerNonBloquant({
         client: db,
         expired: {
           clear: true,
