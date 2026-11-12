@@ -131,6 +131,29 @@ test('Un utilisateur peut se connecter avec ses identifiants', async () => {
 
     assert.equal(loginResponse.status, 200)
     assert.equal(loginResponse.body.message, 'Connexion réussie.')
+    // Vérifier les paramètres de sécurité du cookie de session
+    const cookies = loginResponse.headers['set-cookie']
+    assert.ok(cookies, 'Le serveur doit envoyer un cookie de session')
+
+    const sessionCookie = cookies.find(cookie =>
+      cookie.startsWith('connect.sid=')
+    )
+
+    assert.ok(sessionCookie, 'Le cookie de session doit être présent')
+    assert.match(sessionCookie, /HttpOnly/i)
+    assert.match(sessionCookie, /SameSite=Lax/i)
+    assert.match(sessionCookie, /Expires=/i)
+    const expiresMatch = sessionCookie.match(/Expires=([^;]+)/i)
+
+    assert.ok(expiresMatch, 'La date d’expiration doit être présente')
+
+    const expiresAt = new Date(expiresMatch[1]).getTime()
+    const remainingTime = expiresAt - Date.now()
+
+    assert.ok(
+      remainingTime > 0 && remainingTime <= 2 * 60 * 60 * 1000,
+      'Le cookie doit expirer dans un délai maximal de deux heures'
+    )
 
     // Vérifier que la session est active
     const meResponse = await agent.get('/api/auth/me')
@@ -339,6 +362,105 @@ test('Un utilisateur ne peut pas accéder aux tâches d’un autre utilisateur',
     assert.ok(remainingTask)
     assert.equal(remainingTask.text, 'Tâche privée de A')
     assert.equal(remainingTask.user_id, userA.lastInsertRowid)
+  } finally {
+    db.close()
+  }
+})
+
+test('Une requête sans jeton CSRF est rejetée', async () => {
+  const db = new Database(':memory:')
+
+  db.pragma('foreign_keys = ON')
+
+  db.exec(`
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      done INTEGER DEFAULT 0,
+      due_date TEXT,
+      priority TEXT DEFAULT 'moyenne',
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `)
+
+  const app = creerApp(db)
+  const agent = request.agent(app)
+
+  try {
+    // Initialiser la session CSRF
+    const csrfResponse = await agent.get('/api/csrf-token')
+
+    assert.equal(csrfResponse.status, 200)
+
+    // Envoyer une requête sans transmettre le jeton
+    const response = await agent.post('/api/auth/register').send({
+      name: 'Utilisateur Test',
+      email: 'csrf@example.com',
+      password: 'MotDePasse123'
+    })
+
+    assert.equal(response.status, 403)
+    assert.equal(response.body.message, 'Jeton CSRF invalide ou manquant.')
+  } finally {
+    db.close()
+  }
+})
+
+test('Une requête avec un jeton CSRF invalide est rejetée', async () => {
+  const db = new Database(':memory:')
+
+  db.pragma('foreign_keys = ON')
+
+  db.exec(`
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      done INTEGER DEFAULT 0,
+      due_date TEXT,
+      priority TEXT DEFAULT 'moyenne',
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `)
+
+  const app = creerApp(db)
+  const agent = request.agent(app)
+
+  try {
+    // Initialiser la session CSRF
+    const csrfResponse = await agent.get('/api/csrf-token')
+
+    assert.equal(csrfResponse.status, 200)
+
+    // Envoyer un jeton volontairement incorrect
+    const response = await agent
+      .post('/api/auth/register')
+      .set('x-csrf-token', 'jeton-invalide')
+      .send({
+        name: 'Utilisateur Test',
+        email: 'csrf-invalide@example.com',
+        password: 'MotDePasse123'
+      })
+
+    assert.equal(response.status, 403)
+    assert.equal(response.body.message, 'Jeton CSRF invalide ou manquant.')
   } finally {
     db.close()
   }
