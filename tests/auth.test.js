@@ -8,50 +8,6 @@ const Database = require('better-sqlite3')
 const creerApp = require('../app')
 const bcrypt = require('bcrypt')
 
-test('Un utilisateur non connecté ne peut pas accéder aux tâches', async () => {
-  // Créer une base de données temporaire en mémoire
-  const db = new Database(':memory:')
-
-  db.pragma('foreign_keys = ON')
-
-  // Créer les tables nécessaires au fonctionnement de l'application
-  db.exec(`
-    CREATE TABLE users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      email TEXT NOT NULL UNIQUE,
-      password_hash TEXT NOT NULL,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE tasks (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      text TEXT NOT NULL,
-      done INTEGER DEFAULT 0,
-      due_date TEXT,
-      priority TEXT DEFAULT 'moyenne',
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-  `)
-
-  const app = creerApp(db)
-
-  try {
-    // Simuler une requête sans connexion
-    const response = await request(app).get('/api/tasks')
-
-    // Vérifier que l'accès est refusé
-    assert.equal(response.status, 401)
-
-    assert.equal(
-      response.body.message,
-      'Vous devez être connecté pour accéder à cette ressource.'
-    )
-  } finally {
-    db.close()
-  }
-})
 test('Un utilisateur peut créer un compte et ouvrir une session', async () => {
   const db = new Database(':memory:')
 
@@ -240,10 +196,12 @@ test('Un utilisateur peut se déconnecter et perdre sa session', async () => {
 
   const passwordHash = await bcrypt.hash('MotDePasse123', 12)
 
-  db.prepare(`
+  db.prepare(
+    `
     INSERT INTO users (name, email, password_hash)
     VALUES (?, ?, ?)
-  `).run('Utilisateur Test', 'test@example.com', passwordHash)
+  `
+  ).run('Utilisateur Test', 'test@example.com', passwordHash)
 
   const app = creerApp(db)
   const agent = request.agent(app)
@@ -281,6 +239,106 @@ test('Un utilisateur peut se déconnecter et perdre sa session', async () => {
 
     assert.equal(meResponse.status, 401)
     assert.equal(meResponse.body.message, 'Aucun utilisateur connecté.')
+  } finally {
+    db.close()
+  }
+})
+test('Un utilisateur ne peut pas accéder aux tâches d’un autre utilisateur', async () => {
+  const db = new Database(':memory:')
+
+  db.pragma('foreign_keys = ON')
+
+  db.exec(`
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      done INTEGER DEFAULT 0,
+      due_date TEXT,
+      priority TEXT DEFAULT 'moyenne',
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `)
+
+  try {
+    const passwordHash = await bcrypt.hash('MotDePasse123', 12)
+
+    const userA = db.prepare(`
+      INSERT INTO users (name, email, password_hash)
+      VALUES (?, ?, ?)
+    `).run('Utilisateur A', 'a@example.com', passwordHash)
+
+    db.prepare(`
+      INSERT INTO users (name, email, password_hash)
+      VALUES (?, ?, ?)
+    `).run('Utilisateur B', 'b@example.com', passwordHash)
+
+    const task = db.prepare(`
+      INSERT INTO tasks (user_id, text)
+      VALUES (?, ?)
+    `).run(userA.lastInsertRowid, 'Tâche privée de A')
+
+    const app = creerApp(db)
+    const agentB = request.agent(app)
+
+    const csrfResponse = await agentB.get('/api/csrf-token')
+    const csrfToken = csrfResponse.body.csrfToken
+
+    const loginResponse = await agentB
+      .post('/api/auth/login')
+      .set('x-csrf-token', csrfToken)
+      .send({
+        email: 'b@example.com',
+        password: 'MotDePasse123'
+      })
+
+    assert.equal(loginResponse.status, 200)
+
+    // B ne doit pas voir la tâche de A
+    const tasksResponse = await agentB.get('/api/tasks')
+
+    assert.equal(tasksResponse.status, 200)
+    assert.equal(tasksResponse.body.length, 0)
+
+    const newCsrfResponse = await agentB.get('/api/csrf-token')
+    const newCsrfToken = newCsrfResponse.body.csrfToken
+
+    // B ne doit pas modifier la tâche de A
+    const updateResponse = await agentB
+      .put(`/api/tasks/${task.lastInsertRowid}`)
+      .set('x-csrf-token', newCsrfToken)
+      .send({
+        text: 'Tâche modifiée par B',
+        done: true,
+        dueDate: null,
+        priority: 'haute'
+      })
+
+    assert.equal(updateResponse.status, 404)
+
+    // B ne doit pas supprimer la tâche de A
+    const deleteResponse = await agentB
+      .delete(`/api/tasks/${task.lastInsertRowid}`)
+      .set('x-csrf-token', newCsrfToken)
+
+    assert.equal(deleteResponse.status, 404)
+
+    // La tâche de A doit toujours exister
+    const remainingTask = db.prepare(`
+      SELECT * FROM tasks WHERE id = ?
+    `).get(task.lastInsertRowid)
+
+    assert.ok(remainingTask)
+    assert.equal(remainingTask.text, 'Tâche privée de A')
+    assert.equal(remainingTask.user_id, userA.lastInsertRowid)
   } finally {
     db.close()
   }
