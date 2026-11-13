@@ -101,6 +101,15 @@ registerForm.addEventListener('submit', async event => {
   const name = document.getElementById('register-name').value
   const email = document.getElementById('register-email').value
   const password = document.getElementById('register-password').value
+  const confirmPassword = document.getElementById(
+    'register-password-confirm'
+  ).value
+
+  // Vérifier que les deux mots de passe sont identiques
+  if (password !== confirmPassword) {
+    afficherMessage('Les deux mots de passe ne correspondent pas.')
+    return
+  }
 
   try {
     const token = await obtenirJetonCsrf()
@@ -154,3 +163,18 @@ logoutButton.addEventListener('click', async () => {
 
 // Vérifier la session au chargement
 verifierSession()
+// Afficher ou masquer les mots de passe
+document.querySelectorAll('.toggle-password').forEach((button) => {
+  button.addEventListener('click', () => {
+    const targetId = button.dataset.target
+    const passwordInput = document.getElementById(targetId)
+
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text'
+      button.textContent = 'Masquer'
+    } else {
+      passwordInput.type = 'password'
+      button.textContent = 'Afficher'
+    }
+  })
+})

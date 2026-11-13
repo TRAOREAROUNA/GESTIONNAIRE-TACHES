@@ -438,3 +438,91 @@ button:focus-visible {
 .calendar-day.today .calendar-day-number {
   color: #1d4ed8;
 }
+
+/* =========================
+   AUTHENTIFICATION
+========================= */
+
+#auth-section {
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+#auth-section > h2 {
+  text-align: center;
+  font-size: 27px;
+  margin-bottom: 32px;
+}
+
+#login-section,
+#register-section {
+  padding: 22px;
+  margin-bottom: 22px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+}
+
+#auth-section h3 {
+  margin: 0 0 18px;
+  color: #1e3a5f;
+  font-size: 21px;
+}
+
+#login-form,
+#register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+}
+
+#auth-section input {
+  width: 100%;
+  min-height: 48px;
+  padding: 12px 14px;
+  border-radius: 8px;
+}
+
+.password-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+
+.password-container input {
+  flex: 1;
+  min-width: 0;
+}
+
+#auth-section .toggle-password {
+  flex: 0 0 85px;
+  padding: 9px 8px;
+  font-size: 12px;
+  background: #e2e8f0;
+  color: #1e3a5f;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+}
+
+#auth-section .toggle-password:hover {
+  background: #cbd5e1;
+}
+
+#auth-section button[type="submit"] {
+  width: 100%;
+  min-height: 46px;
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+@media (max-width: 600px) {
+  #auth-section > h2 {
+    font-size: 23px;
+  }
+
+  #login-section,
+  #register-section {
+    padding: 16px;
+  }
+}

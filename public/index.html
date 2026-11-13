@@ -22,12 +22,21 @@
               required
             />
 
-            <input
-              type="password"
-              id="login-password"
-              placeholder="Votre mot de passe"
-              required
-            />
+            <div class="password-container">
+              <input
+                type="password"
+                id="login-password"
+                placeholder="Votre mot de passe"
+                required
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                data-target="login-password"
+              >
+                Afficher
+              </button>
+            </div>
 
             <button type="submit">Se connecter</button>
           </form>
@@ -51,13 +60,39 @@
               required
             />
 
-            <input
-              type="password"
-              id="register-password"
-              placeholder="Mot de passe (8 caractères minimum)"
-              minlength="8"
-              required
-            />
+            <div class="password-container">
+              <input
+                type="password"
+                id="register-password"
+                placeholder="Mot de passe (8 caractères minimum)"
+                minlength="8"
+                required
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                data-target="register-password"
+              >
+                Afficher
+              </button>
+            </div>
+
+            <div class="password-container">
+              <input
+                type="password"
+                id="register-password-confirm"
+                placeholder="Confirmer votre mot de passe"
+                minlength="8"
+                required
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                data-target="register-password-confirm"
+              >
+                Afficher
+              </button>
+            </div>
 
             <button type="submit">Créer mon compte</button>
           </form>
