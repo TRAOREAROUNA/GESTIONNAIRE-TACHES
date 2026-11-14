@@ -40,9 +40,15 @@
 
             <button type="submit">Se connecter</button>
           </form>
-        </div>
 
-        <div id="register-section">
+          <p>
+            Vous n'avez pas encore de compte ?
+            <button type="button" id="show-register-button">
+              Créer un compte
+            </button>
+          </p>
+        </div>
+        <div id="register-section" hidden>
           <h3>Créer un compte</h3>
 
           <form id="register-form">
@@ -96,6 +102,10 @@
 
             <button type="submit">Créer mon compte</button>
           </form>
+          <p>
+            Vous avez déjà un compte ?
+            <button type="button" id="show-login-button">Se connecter</button>
+          </p>
         </div>
 
         <p id="auth-message"></p>

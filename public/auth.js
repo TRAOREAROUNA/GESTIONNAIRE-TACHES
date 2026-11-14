@@ -27,6 +27,25 @@ window.obtenirJetonCsrf = obtenirJetonCsrf
 
 const loginForm = document.getElementById('login-form')
 const registerForm = document.getElementById('register-form')
+const loginSection = document.getElementById('login-section')
+const registerSection = document.getElementById('register-section')
+
+const showRegisterButton = document.getElementById('show-register-button')
+const showLoginButton = document.getElementById('show-login-button')
+
+// Passer du formulaire de connexion à l'inscription
+showRegisterButton.addEventListener('click', () => {
+  loginSection.hidden = true
+  registerSection.hidden = false
+  afficherMessage('')
+})
+
+// Revenir au formulaire de connexion
+showLoginButton.addEventListener('click', () => {
+  registerSection.hidden = true
+  loginSection.hidden = false
+  afficherMessage('')
+})
 
 const authMessage = document.getElementById('auth-message')
 const currentUser = document.getElementById('current-user')
@@ -45,9 +64,10 @@ async function verifierSession () {
     if (!response.ok) {
       authSection.hidden = false
       taskApp.hidden = true
+      loginSection.hidden = false
+      registerSection.hidden = true
       return
     }
-
     const data = await response.json()
 
     currentUser.textContent = data.user.name
@@ -153,6 +173,8 @@ logoutButton.addEventListener('click', async () => {
     if (response.ok) {
       taskApp.hidden = true
       authSection.hidden = false
+      loginSection.hidden = false
+      registerSection.hidden = true
       currentUser.textContent = ''
       afficherMessage('Vous êtes déconnecté.')
     }
