@@ -294,20 +294,30 @@ test('Un utilisateur ne peut pas accéder aux tâches d’un autre utilisateur',
   try {
     const passwordHash = await bcrypt.hash('MotDePasse123', 12)
 
-    const userA = db.prepare(`
+    const userA = db
+      .prepare(
+        `
       INSERT INTO users (name, email, password_hash)
       VALUES (?, ?, ?)
-    `).run('Utilisateur A', 'a@example.com', passwordHash)
+    `
+      )
+      .run('Utilisateur A', 'a@example.com', passwordHash)
 
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO users (name, email, password_hash)
       VALUES (?, ?, ?)
-    `).run('Utilisateur B', 'b@example.com', passwordHash)
+    `
+    ).run('Utilisateur B', 'b@example.com', passwordHash)
 
-    const task = db.prepare(`
+    const task = db
+      .prepare(
+        `
       INSERT INTO tasks (user_id, text)
       VALUES (?, ?)
-    `).run(userA.lastInsertRowid, 'Tâche privée de A')
+    `
+      )
+      .run(userA.lastInsertRowid, 'Tâche privée de A')
 
     const app = creerApp(db)
     const agentB = request.agent(app)
@@ -355,9 +365,13 @@ test('Un utilisateur ne peut pas accéder aux tâches d’un autre utilisateur',
     assert.equal(deleteResponse.status, 404)
 
     // La tâche de A doit toujours exister
-    const remainingTask = db.prepare(`
+    const remainingTask = db
+      .prepare(
+        `
       SELECT * FROM tasks WHERE id = ?
-    `).get(task.lastInsertRowid)
+    `
+      )
+      .get(task.lastInsertRowid)
 
     assert.ok(remainingTask)
     assert.equal(remainingTask.text, 'Tâche privée de A')
@@ -461,6 +475,194 @@ test('Une requête avec un jeton CSRF invalide est rejetée', async () => {
 
     assert.equal(response.status, 403)
     assert.equal(response.body.message, 'Jeton CSRF invalide ou manquant.')
+  } finally {
+    db.close()
+  }
+})
+
+test('Un utilisateur connecté peut modifier son profil', async () => {
+  const db = new Database(':memory:')
+
+  db.pragma('foreign_keys = ON')
+
+  db.exec(`
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      done INTEGER DEFAULT 0,
+      due_date TEXT,
+      priority TEXT DEFAULT 'moyenne',
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `)
+
+  const app = creerApp(db)
+  const agent = request.agent(app)
+
+  try {
+    const passwordHash = await bcrypt.hash('MotDePasse123', 12)
+
+    db.prepare(
+      `
+      INSERT INTO users (name, email, password_hash)
+      VALUES (?, ?, ?)
+    `
+    ).run('Ancien Nom', 'ancien@example.com', passwordHash)
+
+    // Initialiser la session CSRF
+    const initialCsrfResponse = await agent.get('/api/csrf-token')
+    const initialCsrfToken = initialCsrfResponse.body.csrfToken
+
+    // Connecter l'utilisateur avec le jeton CSRF
+    const loginResponse = await agent
+      .post('/api/auth/login')
+      .set('x-csrf-token', initialCsrfToken)
+      .send({
+        email: 'ancien@example.com',
+        password: 'MotDePasse123'
+      })
+    assert.equal(loginResponse.status, 200)
+
+    // Récupérer un nouveau jeton CSRF après connexion
+    const csrfResponse = await agent.get('/api/csrf-token')
+    const csrfToken = csrfResponse.body.csrfToken
+
+    // Modifier le profil
+    const response = await agent
+      .put('/api/auth/profile')
+      .set('x-csrf-token', csrfToken)
+      .send({
+        name: 'Nouveau Nom',
+        email: 'nouveau@example.com'
+      })
+
+    assert.equal(response.status, 200)
+    assert.equal(response.body.user.name, 'Nouveau Nom')
+    assert.equal(response.body.user.email, 'nouveau@example.com')
+
+    // Vérifier les données directement dans SQLite
+    const user = db
+      .prepare(
+        `
+      SELECT name, email
+      FROM users
+      WHERE id = ?
+    `
+      )
+      .get(loginResponse.body.user.id)
+
+    assert.equal(user.name, 'Nouveau Nom')
+    assert.equal(user.email, 'nouveau@example.com')
+  } finally {
+    db.close()
+  }
+})
+
+test('Un utilisateur connecté peut modifier son mot de passe', async () => {
+  const db = new Database(':memory:')
+
+  db.pragma('foreign_keys = ON')
+
+  db.exec(`
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      done INTEGER DEFAULT 0,
+      due_date TEXT,
+      priority TEXT DEFAULT 'moyenne',
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `)
+
+  const app = creerApp(db)
+  const agent = request.agent(app)
+
+  try {
+    const ancienMotDePasse = 'MotDePasse123'
+    const nouveauMotDePasse = 'NouveauMotDePasse456'
+
+    const passwordHash = await bcrypt.hash(ancienMotDePasse, 12)
+
+    db.prepare(`
+      INSERT INTO users (name, email, password_hash)
+      VALUES (?, ?, ?)
+    `).run('Utilisateur Test', 'password@example.com', passwordHash)
+
+    // Initialiser la session CSRF
+    const initialCsrfResponse = await agent.get('/api/csrf-token')
+    const initialCsrfToken = initialCsrfResponse.body.csrfToken
+
+    // Connecter l'utilisateur
+    const loginResponse = await agent
+      .post('/api/auth/login')
+      .set('x-csrf-token', initialCsrfToken)
+      .send({
+        email: 'password@example.com',
+        password: ancienMotDePasse
+      })
+
+    assert.equal(loginResponse.status, 200)
+
+    // Récupérer un nouveau jeton CSRF après connexion
+    const csrfResponse = await agent.get('/api/csrf-token')
+    const csrfToken = csrfResponse.body.csrfToken
+
+    // Vérifier le refus d'un ancien mot de passe incorrect
+    const mauvaisMotDePasse = await agent
+      .put('/api/auth/password')
+      .set('x-csrf-token', csrfToken)
+      .send({
+        currentPassword: 'MauvaisMotDePasse',
+        newPassword: nouveauMotDePasse
+      })
+
+    assert.equal(mauvaisMotDePasse.status, 401)
+
+    // Modifier le mot de passe avec le bon ancien mot de passe
+    const response = await agent
+      .put('/api/auth/password')
+      .set('x-csrf-token', csrfToken)
+      .send({
+        currentPassword: ancienMotDePasse,
+        newPassword: nouveauMotDePasse
+      })
+
+    assert.equal(response.status, 200)
+
+    // Vérifier le nouveau mot de passe dans SQLite
+    const user = db.prepare(`
+      SELECT password_hash
+      FROM users
+      WHERE email = ?
+    `).get('password@example.com')
+
+    assert.equal(
+      await bcrypt.compare(nouveauMotDePasse, user.password_hash),
+      true
+    )
+
+    assert.equal(
+      await bcrypt.compare(ancienMotDePasse, user.password_hash),
+      false
+    )
   } finally {
     db.close()
   }
