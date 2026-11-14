@@ -103,8 +103,84 @@
       <section id="task-app" hidden>
         <div id="user-bar">
           <p>Connecté : <span id="current-user"></span></p>
-          <button type="button" id="logout-button">Se déconnecter</button>
+
+          <div>
+            <button type="button" id="profile-button">Mon profil</button>
+            <button type="button" id="logout-button">Se déconnecter</button>
+          </div>
         </div>
+        <section id="profile-section" hidden>
+          <h2>Mon profil</h2>
+
+          <button type="button" id="profile-back-button">
+            Retour aux tâches
+          </button>
+
+          <h3>Informations personnelles</h3>
+
+          <form id="profile-form">
+            <label for="profile-name">Nom :</label>
+            <input type="text" id="profile-name" maxlength="100" required />
+
+            <label for="profile-email">Adresse e-mail :</label>
+            <input type="email" id="profile-email" required />
+
+            <button type="submit">Enregistrer les modifications</button>
+          </form>
+
+          <p id="profile-message" role="status"></p>
+
+          <h3>Changer le mot de passe</h3>
+
+          <form id="password-form">
+            <label for="current-password">Mot de passe actuel :</label>
+            <div class="password-container">
+              <input type="password" id="current-password" required />
+              <button
+                type="button"
+                class="toggle-password"
+                data-target="current-password"
+              >
+                Afficher
+              </button>
+            </div>
+
+            <label for="new-password">Nouveau mot de passe :</label>
+            <div class="password-container">
+              <input type="password" id="new-password" minlength="8" required />
+              <button
+                type="button"
+                class="toggle-password"
+                data-target="new-password"
+              >
+                Afficher
+              </button>
+            </div>
+
+            <label for="confirm-new-password"
+              >Confirmer le nouveau mot de passe :</label
+            >
+            <div class="password-container">
+              <input
+                type="password"
+                id="confirm-new-password"
+                minlength="8"
+                required
+              />
+              <button
+                type="button"
+                class="toggle-password"
+                data-target="confirm-new-password"
+              >
+                Afficher
+              </button>
+            </div>
+
+            <button type="submit">Modifier le mot de passe</button>
+          </form>
+
+          <p id="password-message" role="status"></p>
+        </section>
         <h1>Mon gestionnaire de tâches</h1>
 
         <section id="task-dashboard">
