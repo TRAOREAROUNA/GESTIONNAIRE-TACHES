@@ -19,7 +19,7 @@ class SqliteStoreAvecTimerNonBloquant extends SqliteStore {
 const creerRoutesAuth = require('./routes/auth')
 const creerRoutesTasks = require('./routes/tasks')
 
-function creerApp (db) {
+function creerApp (db, options = {}) {
   const app = express()
 
   const { generateToken, csrfSynchronisedProtection } = csrfSync()
@@ -100,7 +100,7 @@ function creerApp (db) {
     next(err)
   })
 
-  app.use('/api/auth', creerRoutesAuth(db))
+  app.use('/api/auth', creerRoutesAuth(db, options))
   app.use('/api/tasks', creerRoutesTasks(db))
 
   app.use(express.static(path.join(__dirname, 'public')))

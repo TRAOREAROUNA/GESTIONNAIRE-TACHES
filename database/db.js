@@ -32,6 +32,24 @@ db.exec(`
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
   )
 `)
+// Création de la table des jetons de réinitialisation
+db.exec(`
+  CREATE TABLE IF NOT EXISTS password_reset_tokens (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    expires_at DATETIME NOT NULL,
+    used_at DATETIME,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  )
+`)
+
+// Index pour accélérer la recherche des jetons
+db.exec(`
+  CREATE INDEX IF NOT EXISTS idx_password_reset_tokens_user_id
+  ON password_reset_tokens(user_id)
+`)
 
 console.log('Base de données initialisée avec succès.')
 
