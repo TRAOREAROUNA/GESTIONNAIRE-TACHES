@@ -31,6 +31,15 @@ test('Un utilisateur peut créer un compte et ouvrir une session', async () => {
       priority TEXT DEFAULT 'moyenne',
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+    CREATE TABLE password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
   `)
 
   const app = creerApp(db)
@@ -96,6 +105,15 @@ test('Un utilisateur peut se connecter avec ses identifiants', async () => {
       done INTEGER DEFAULT 0,
       due_date TEXT,
       priority TEXT DEFAULT 'moyenne',
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE TABLE password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
   `)
@@ -215,6 +233,15 @@ test('Un utilisateur peut se déconnecter et perdre sa session', async () => {
       priority TEXT DEFAULT 'moyenne',
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+    CREATE TABLE password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
   `)
 
   const passwordHash = await bcrypt.hash('MotDePasse123', 12)
@@ -287,6 +314,15 @@ test('Un utilisateur ne peut pas accéder aux tâches d’un autre utilisateur',
       done INTEGER DEFAULT 0,
       due_date TEXT,
       priority TEXT DEFAULT 'moyenne',
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE TABLE password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
   `)
@@ -404,6 +440,15 @@ test('Une requête sans jeton CSRF est rejetée', async () => {
       priority TEXT DEFAULT 'moyenne',
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+    CREATE TABLE password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
   `)
 
   const app = creerApp(db)
@@ -450,6 +495,15 @@ test('Une requête avec un jeton CSRF invalide est rejetée', async () => {
       done INTEGER DEFAULT 0,
       due_date TEXT,
       priority TEXT DEFAULT 'moyenne',
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE TABLE password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
   `)
@@ -501,6 +555,15 @@ test('Un utilisateur connecté peut modifier son profil', async () => {
       done INTEGER DEFAULT 0,
       due_date TEXT,
       priority TEXT DEFAULT 'moyenne',
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+    CREATE TABLE password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
   `)
@@ -590,6 +653,15 @@ test('Un utilisateur connecté peut modifier son mot de passe', async () => {
       priority TEXT DEFAULT 'moyenne',
       FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     );
+    CREATE TABLE password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
   `)
 
   const app = creerApp(db)
@@ -601,10 +673,12 @@ test('Un utilisateur connecté peut modifier son mot de passe', async () => {
 
     const passwordHash = await bcrypt.hash(ancienMotDePasse, 12)
 
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO users (name, email, password_hash)
       VALUES (?, ?, ?)
-    `).run('Utilisateur Test', 'password@example.com', passwordHash)
+    `
+    ).run('Utilisateur Test', 'password@example.com', passwordHash)
 
     // Initialiser la session CSRF
     const initialCsrfResponse = await agent.get('/api/csrf-token')
@@ -648,11 +722,15 @@ test('Un utilisateur connecté peut modifier son mot de passe', async () => {
     assert.equal(response.status, 200)
 
     // Vérifier le nouveau mot de passe dans SQLite
-    const user = db.prepare(`
+    const user = db
+      .prepare(
+        `
       SELECT password_hash
       FROM users
       WHERE email = ?
-    `).get('password@example.com')
+    `
+      )
+      .get('password@example.com')
 
     assert.equal(
       await bcrypt.compare(nouveauMotDePasse, user.password_hash),
@@ -663,6 +741,155 @@ test('Un utilisateur connecté peut modifier son mot de passe', async () => {
       await bcrypt.compare(ancienMotDePasse, user.password_hash),
       false
     )
+  } finally {
+    db.close()
+  }
+})
+
+function creerBaseTestReinitialisation () {
+  const db = new Database(':memory:')
+
+  db.pragma('foreign_keys = ON')
+
+  db.exec(`
+    CREATE TABLE users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      email TEXT NOT NULL UNIQUE,
+      password_hash TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE tasks (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      text TEXT NOT NULL,
+      done INTEGER DEFAULT 0,
+      due_date TEXT,
+      priority TEXT DEFAULT 'moyenne',
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE password_reset_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      token_hash TEXT NOT NULL UNIQUE,
+      expires_at DATETIME NOT NULL,
+      used_at DATETIME,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    );
+  `)
+
+  return db
+}
+
+test('Une demande de réinitialisation pour un compte inconnu ne révèle pas son existence', async () => {
+  const db = creerBaseTestReinitialisation()
+  let nombreEmails = 0
+
+  const fauxTransporter = {
+    sendMail: async () => {
+      nombreEmails++
+    }
+  }
+
+  const app = creerApp(db, { transporter: fauxTransporter })
+  const agent = request.agent(app)
+
+  try {
+    const csrfResponse = await agent.get('/api/csrf-token')
+
+    const response = await agent
+      .post('/api/auth/forgot-password')
+      .set('x-csrf-token', csrfResponse.body.csrfToken)
+      .send({ email: 'inconnu@example.com' })
+
+    assert.equal(response.status, 200)
+    assert.equal(nombreEmails, 0)
+    assert.match(response.body.message, /Si cette adresse correspond/)
+  } finally {
+    db.close()
+  }
+})
+
+test('Un utilisateur peut réinitialiser son mot de passe avec un jeton valide une seule fois', async () => {
+  const db = creerBaseTestReinitialisation()
+  let mailEnvoye = null
+
+  const fauxTransporter = {
+    sendMail: async options => {
+      mailEnvoye = options
+    }
+  }
+
+  try {
+    const ancienMotDePasse = 'AncienMotDePasse123'
+    const nouveauMotDePasse = 'NouveauMotDePasse456'
+
+    const passwordHash = await bcrypt.hash(ancienMotDePasse, 12)
+
+    db.prepare(
+      `
+      INSERT INTO users (name, email, password_hash)
+      VALUES (?, ?, ?)
+    `
+    ).run('Utilisateur Test', 'test@example.com', passwordHash)
+
+    const app = creerApp(db, { transporter: fauxTransporter })
+    const agent = request.agent(app)
+
+    const csrfResponse = await agent.get('/api/csrf-token')
+
+    const demande = await agent
+      .post('/api/auth/forgot-password')
+      .set('x-csrf-token', csrfResponse.body.csrfToken)
+      .send({ email: 'test@example.com' })
+
+    assert.equal(demande.status, 200)
+    assert.ok(mailEnvoye)
+
+    const correspondance = mailEnvoye.text.match(/token=([a-f0-9]{64})/)
+
+    assert.ok(correspondance, 'Le lien envoyé doit contenir un jeton valide')
+
+    const token = correspondance[1]
+
+    const nouveauCsrf = await agent.get('/api/csrf-token')
+
+    const reinitialisation = await agent
+      .post(`/api/auth/reset-password/${token}`)
+      .set('x-csrf-token', nouveauCsrf.body.csrfToken)
+      .send({ newPassword: nouveauMotDePasse })
+
+    assert.equal(reinitialisation.status, 200)
+
+    const user = db
+      .prepare(
+        `
+      SELECT password_hash
+      FROM users
+      WHERE email = ?
+    `
+      )
+      .get('test@example.com')
+
+    assert.equal(
+      await bcrypt.compare(nouveauMotDePasse, user.password_hash),
+      true
+    )
+
+    assert.equal(
+      await bcrypt.compare(ancienMotDePasse, user.password_hash),
+      false
+    )
+
+    const reutilisation = await agent
+      .post(`/api/auth/reset-password/${token}`)
+      .set('x-csrf-token', nouveauCsrf.body.csrfToken)
+      .send({ newPassword: 'AutreMotDePasse789' })
+
+    assert.equal(reutilisation.status, 400)
   } finally {
     db.close()
   }
