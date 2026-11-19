@@ -33,6 +33,67 @@ const registerSection = document.getElementById('register-section')
 const showRegisterButton = document.getElementById('show-register-button')
 const showLoginButton = document.getElementById('show-login-button')
 
+const forgotPasswordSection = document.getElementById('forgot-password-section')
+const forgotPasswordForm = document.getElementById('forgot-password-form')
+const forgotPasswordEmail = document.getElementById('forgot-password-email')
+const forgotPasswordMessage = document.getElementById('forgot-password-message')
+
+const showForgotPasswordButton = document.getElementById(
+  'show-forgot-password-button'
+)
+const backToLoginButton = document.getElementById('back-to-login-button')
+
+// Afficher le formulaire de mot de passe oublié
+showForgotPasswordButton.addEventListener('click', () => {
+  loginSection.hidden = true
+  registerSection.hidden = true
+  forgotPasswordSection.hidden = false
+
+  forgotPasswordEmail.value = document.getElementById('login-email').value
+
+  forgotPasswordMessage.textContent = ''
+})
+
+// Revenir à la connexion
+backToLoginButton.addEventListener('click', () => {
+  forgotPasswordSection.hidden = true
+  loginSection.hidden = false
+  forgotPasswordMessage.textContent = ''
+})
+
+// Envoyer la demande de réinitialisation
+forgotPasswordForm.addEventListener('submit', async event => {
+  event.preventDefault()
+
+  const email = forgotPasswordEmail.value.trim()
+
+  try {
+    const token = await obtenirJetonCsrf()
+
+    const response = await fetch('/api/auth/forgot-password', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-csrf-token': token
+      },
+      body: JSON.stringify({ email })
+    })
+
+    const data = await response.json()
+
+    if (!response.ok) {
+      forgotPasswordMessage.textContent =
+        data.message || 'Erreur lors de la demande.'
+      return
+    }
+
+    forgotPasswordMessage.textContent = data.message
+    forgotPasswordForm.reset()
+  } catch (error) {
+    forgotPasswordMessage.textContent = 'Erreur de connexion au serveur.'
+  }
+})
+
 // Passer du formulaire de connexion à l'inscription
 showRegisterButton.addEventListener('click', () => {
   loginSection.hidden = true

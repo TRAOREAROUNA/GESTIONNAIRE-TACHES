@@ -39,6 +39,11 @@
             </div>
 
             <button type="submit">Se connecter</button>
+            <p class="forgot-password">
+              <button type="button" id="show-forgot-password-button">
+                Mot de passe oublié ?
+              </button>
+            </p>
           </form>
 
           <p>
@@ -48,6 +53,33 @@
             </button>
           </p>
         </div>
+
+        <div id="forgot-password-section" hidden>
+          <h3>Mot de passe oublié ?</h3>
+
+          <p>
+            Saisissez votre adresse e-mail pour recevoir un lien de
+            réinitialisation de votre mot de passe.
+          </p>
+
+          <form id="forgot-password-form">
+            <input
+              type="email"
+              id="forgot-password-email"
+              placeholder="Votre adresse e-mail"
+              required
+            />
+
+            <button type="submit">Envoyer le lien de réinitialisation</button>
+          </form>
+
+          <p id="forgot-password-message"></p>
+
+          <button type="button" id="back-to-login-button">
+            Retour à la connexion
+          </button>
+        </div>
+
         <div id="register-section" hidden>
           <h3>Créer un compte</h3>
 
